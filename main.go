@@ -3,10 +3,10 @@ package main
 import (
 	"os"
 
-	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
+	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
 	"k8s.io/klog"
 
-	"github.com/mdonoughe/cert-manager-porkbun/porkbun"
+	"github.com/mdonoughe/porkbun-webhook/porkbun"
 )
 
 var GroupName = os.Getenv("GROUP_NAME")
