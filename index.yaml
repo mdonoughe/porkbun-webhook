@@ -3,6 +3,15 @@ entries:
   porkbun-webhook:
   - apiVersion: v1
     appVersion: "1.0"
+    created: "2023-11-11T19:44:08.607966997Z"
+    description: A Porkbun solver for Cert Manager.
+    digest: da4f95d460080a6e835d1209cf184c442adfd71ad7e205bea9635b9aa4e8a2ea
+    name: porkbun-webhook
+    urls:
+    - https://github.com/mdonoughe/porkbun-webhook/releases/download/porkbun-webhook-0.1.3/porkbun-webhook-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v1
+    appVersion: "1.0"
     created: "2022-05-16T02:07:57.602391298Z"
     description: A Porkbun solver for Cert Manager.
     digest: c9d87c1b0c86962cbe1e0bc2c83fb26935c05d3be6bbe17788192896d6d5c1b6
@@ -19,4 +28,4 @@ entries:
     urls:
     - https://github.com/mdonoughe/porkbun-webhook/releases/download/porkbun-webhook-0.1.1/porkbun-webhook-0.1.1.tgz
     version: 0.1.1
-generated: "2022-05-16T02:07:57.602398199Z"
+generated: "2023-11-11T19:44:08.607985598Z"
