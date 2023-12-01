@@ -1,4 +1,9 @@
-# Folders
+chart/
+.editorconfig
+.gitattributes
+.gitignore
+README.md
+
 .idea/
 .vscode/
 

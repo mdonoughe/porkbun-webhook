@@ -1,0 +1,24 @@
+apiVersion: v2
+type: application
+name: cert-manager-porkbun-webhook
+description: Allow cert-manager to solve DNS challenges using Porkbun DNS
+
+version: 0.0.0-template
+appVersion: 0.0.0-template
+
+icon: https://porkbun.com/partners/logos/porkbun.comphpPkl2eU.svg
+home: https://ghcr.io/dmahmalat/charts
+
+sources:
+- https://github.com/dmahmalat/cert-manager-porkbun-webhook
+
+keywords:
+- cert-manager
+- porkbun
+- webhook
+- tls
+- dns
+
+maintainers:
+- name: dmahmalat
+  email: dany@mahmalat.com

@@ -3,14 +3,15 @@ package porkbun
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/jetstack/cert-manager/pkg/acme/webhook"
-	acme "github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
+	"github.com/cert-manager/cert-manager/pkg/acme/webhook"
+	acme "github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/nrdcg/porkbun"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
+	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -25,55 +26,25 @@ func (e *PorkbunSolver) Name() string {
 	return "porkbun"
 }
 
+type PorkbunDNSProviderConfig struct {
+	SecretNameRef      string `json:"secretNameRef"`
+	ApiKeySecretRef    string `json:"apiKeySecretRef"`
+	SecretKeySecretRef string `json:"secretKeySecretRef"`
+}
+
 type Config struct {
-	ApiKeySecretRef    corev1.SecretKeySelector `json:"apiKeySecretRef"`
-	SecretKeySecretRef corev1.SecretKeySelector `json:"secretKeySecretRef"`
-}
-
-func (e *PorkbunSolver) readConfig(request *acme.ChallengeRequest) (*porkbun.Client, error) {
-	config := Config{}
-
-	if request.Config != nil {
-		if err := json.Unmarshal(request.Config.Raw, &config); err != nil {
-			return nil, errors.Wrap(err, "config error")
-		}
-	}
-
-	apiKey, err := e.resolveSecretRef(config.ApiKeySecretRef, request)
-	if err != nil {
-		return nil, err
-	}
-
-	secretKey, err := e.resolveSecretRef(config.SecretKeySecretRef, request)
-	if err != nil {
-		return nil, err
-	}
-
-	return porkbun.New(secretKey, apiKey), nil
-}
-
-func (e *PorkbunSolver) resolveSecretRef(selector corev1.SecretKeySelector, ch *acme.ChallengeRequest) (string, error) {
-	secret, err := e.kube.CoreV1().Secrets(ch.ResourceNamespace).Get(context.Background(), selector.Name, metav1.GetOptions{})
-	if err != nil {
-		return "", errors.Wrapf(err, "get error for secret %q %q", ch.ResourceNamespace, selector.Name)
-	}
-
-	bytes, ok := secret.Data[selector.Key]
-	if !ok {
-		return "", errors.Errorf("secret %q %q does not contain key %q", ch.ResourceNamespace, selector.Name, selector.Key)
-	}
-
-	return string(bytes), nil
+	Client porkbun.Client
 }
 
 func (e *PorkbunSolver) Present(ch *acme.ChallengeRequest) error {
 	klog.Infof("Handling present request for %q %q", ch.ResolvedFQDN, ch.Key)
 
-	client, err := e.readConfig(ch)
+	config, err := clientConfig(e, ch)
 	if err != nil {
 		return errors.Wrap(err, "initialization error")
 	}
 
+	client := config.Client
 	domain := strings.TrimSuffix(ch.ResolvedZone, ".")
 	entity := strings.TrimSuffix(ch.ResolvedFQDN, "."+ch.ResolvedZone)
 	name := strings.TrimSuffix(ch.ResolvedFQDN, ".")
@@ -84,7 +55,7 @@ func (e *PorkbunSolver) Present(ch *acme.ChallengeRequest) error {
 
 	for _, record := range records {
 		if record.Type == "TXT" && record.Name == name && record.Content == ch.Key {
-			klog.Infof("Record is already present", record.ID)
+			klog.Infof("Record %s is already present", record.ID)
 			return nil
 		}
 	}
@@ -106,11 +77,12 @@ func (e *PorkbunSolver) Present(ch *acme.ChallengeRequest) error {
 func (e *PorkbunSolver) CleanUp(ch *acme.ChallengeRequest) error {
 	klog.Infof("Handling cleanup request for %q %q", ch.ResolvedFQDN, ch.Key)
 
-	client, err := e.readConfig(ch)
+	config, err := clientConfig(e, ch)
 	if err != nil {
 		return errors.Wrap(err, "initialization error")
 	}
 
+	client := config.Client
 	domain := strings.TrimSuffix(ch.ResolvedZone, ".")
 	name := strings.TrimSuffix(ch.ResolvedFQDN, ".")
 	records, err := client.RetrieveRecords(context.Background(), domain)
@@ -137,7 +109,6 @@ func (e *PorkbunSolver) CleanUp(ch *acme.ChallengeRequest) error {
 	}
 
 	klog.Info("No matching record to delete")
-
 	return nil
 }
 
@@ -155,4 +126,59 @@ func (e *PorkbunSolver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan 
 
 func New() webhook.Solver {
 	return &PorkbunSolver{}
+}
+
+// Config ------------------------------------------------------
+func stringFromSecretData(secretData *map[string][]byte, key string) (string, error) {
+	data, ok := (*secretData)[key]
+	if !ok {
+		return "", errors.New(fmt.Sprintf("key %q not found in secret data", key))
+	}
+
+	return string(data), nil
+}
+
+func loadConfig(cfgJSON *extapi.JSON) (PorkbunDNSProviderConfig, error) {
+	cfg := PorkbunDNSProviderConfig{}
+
+	// handle the 'base case' where no configuration has been provided
+	if cfgJSON == nil {
+		return cfg, nil
+	}
+
+	if err := json.Unmarshal(cfgJSON.Raw, &cfg); err != nil {
+		return cfg, errors.Wrap(err, fmt.Sprintf("error decoding solver config: %v", err))
+	}
+	return cfg, nil
+}
+
+func clientConfig(c *PorkbunSolver, ch *acme.ChallengeRequest) (Config, error) {
+	var config Config
+
+	cfg, err := loadConfig(ch.Config)
+	if err != nil {
+		return config, err
+	}
+
+	secretName := cfg.SecretNameRef
+	apiKeyRef := cfg.ApiKeySecretRef
+	secretKeyRef := cfg.SecretKeySecretRef
+
+	sec, err := c.kube.CoreV1().Secrets(ch.ResourceNamespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+	if err != nil {
+		return config, errors.Wrap(err, fmt.Sprintf("unable to get secret `%s/%s`; %v", secretName, ch.ResourceNamespace, err))
+	}
+
+	apiKey, err := stringFromSecretData(&sec.Data, apiKeyRef)
+	if err != nil {
+		return config, errors.Wrap(err, fmt.Sprintf("unable to get api-key from secret `%s/%s`; %v", secretName, ch.ResourceNamespace, err))
+	}
+
+	secretKey, err := stringFromSecretData(&sec.Data, secretKeyRef)
+	if err != nil {
+		return config, errors.Wrap(err, fmt.Sprintf("unable to get secret-key from secret `%s/%s`; %v", secretName, ch.ResourceNamespace, err))
+	}
+
+	config.Client = *porkbun.New(secretKey, apiKey)
+	return config, nil
 }
