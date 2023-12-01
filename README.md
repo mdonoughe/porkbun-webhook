@@ -8,7 +8,7 @@ helm install my-release oci://ghcr.io/dmahmalat/charts/cert-manager-porkbun-webh
 
 To test:
 ```bash
-TEST_DOMAIN_NAME=<domain> TEST_API_KEY=$(echo -n '<API Key>' | base64) TEST_SECRET_KEY=$(echo -n '<SECRET Key>' | base64) make test
+TEST_DOMAIN_NAME=<your-domain> TEST_API_KEY=$(echo -n '<api-key>' | base64) TEST_SECRET_KEY=$(echo -n '<secret-key>' | base64) make test
 ```
 
 # Example Issuer
@@ -20,24 +20,33 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: <your e-mail>
+    email: <your-email>
     privateKeySecretRef:
       name: letsencrypt-key
     solvers:
-      - selector:
-          dnsZones:
-            - <your domain>
-        dns01:
-          webhook:
-            groupName: <your group>
-            solverName: porkbun
-            config:
-              apiKeySecretRef:
-                name: porkbun-key
-                key: api-key
-              secretKeySecretRef:
-                name: porkbun-key
-                key: secret-key
+    - selector:
+        dnsZones:
+        - <your-domain>
+      dns01:
+        webhook:
+          groupName: <your-group>
+          solverName: porkbun
+          config:
+            secretNameRef: <secret-name>
+            apiKeySecretRef: api-key
+            secretKeySecretRef: secret-key
+```
+
+# Example Secret
+```yaml
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: <secret-name>
+stringData:
+  api-key: <api-key>
+  secret-key: <secret-key>
 ```
 
 # Credits

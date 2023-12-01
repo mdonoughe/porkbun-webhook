@@ -12,7 +12,7 @@ export TEST_ASSET_KUBECTL=_test/kubebuilder/kubectl
 
 REGISTRY = ghcr.io
 IMAGE_NAME = dmahmalat/cert-manager-porkbun-webhook
-IMAGE_TAG  = 1.1.3
+IMAGE_TAG  = 1.0.1
 
 
 ##@ Help
@@ -22,7 +22,7 @@ help: ## Display this help screen
 
 ##@ Test
 .PHONY: test
-test: ## Usage: TEST_DOMAIN_NAME=<domain> TEST_API_KEY=$(echo -n '<API Key>' | base64) TEST_SECRET_KEY=$(echo -n '<SECRET Key>' | base64) make test
+test: ## Usage: TEST_DOMAIN_NAME=<your-domain> TEST_API_KEY=$(echo -n '<api-key>' | base64) TEST_SECRET_KEY=$(echo -n '<secret-key>' | base64) make test
 	curl -fsSL https://go.kubebuilder.io/test-tools/$(KUBE_VERSION)/$(OS)/$(ARCH) -o kubebuilder-tools.tar.gz
 	mkdir -p _test/kubebuilder
 	tar -xvf kubebuilder-tools.tar.gz
