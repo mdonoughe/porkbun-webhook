@@ -8,9 +8,11 @@ import (
 
 	"github.com/cert-manager/cert-manager/test/acme/dns"
 	"github.com/dmahmalat/cert-manager-porkbun-webhook/porkbun"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
-	"k8s.io/klog/v2"
 )
+
+var zapLogger, _ = zap.NewProduction()
 
 var (
 	domain    = os.Getenv("TEST_DOMAIN_NAME")
@@ -38,6 +40,8 @@ type SecretYaml struct {
 }
 
 func TestRunsSuite(t *testing.T) {
+	slogger := zapLogger.Sugar()
+
 	secretYaml := SecretYaml{}
 	secretYaml.ApiVersion = "v1"
 	secretYaml.Kind = "Secret"
@@ -48,7 +52,7 @@ func TestRunsSuite(t *testing.T) {
 
 	secretYamlFile, err := yaml.Marshal(&secretYaml)
 	if err != nil {
-		klog.Errorf("Error: %v", err.Error())
+		slogger.Errorf("Error: %v", err.Error())
 	}
 	_ = os.WriteFile(secretYamlFilePath, secretYamlFile, 0644)
 
