@@ -6,12 +6,11 @@ require (
 	github.com/cert-manager/cert-manager v1.11.1
 	github.com/nrdcg/porkbun v0.3.0
 	github.com/pkg/errors v0.9.1
+	go.uber.org/zap v1.24.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apiextensions-apiserver v0.26.0
 	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v0.26.0
-	k8s.io/klog v0.2.0
-	k8s.io/klog/v2 v2.80.1
 )
 
 require (
@@ -76,7 +75,6 @@ require (
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
@@ -97,6 +95,7 @@ require (
 	k8s.io/api v0.26.0 // indirect
 	k8s.io/apiserver v0.26.0 // indirect
 	k8s.io/component-base v0.26.0 // indirect
+	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kms v0.26.0 // indirect
 	k8s.io/kube-aggregator v0.26.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20221207184640-f3cff1453715 // indirect

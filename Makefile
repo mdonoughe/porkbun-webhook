@@ -12,7 +12,7 @@ export TEST_ASSET_KUBECTL=_test/kubebuilder/kubectl
 
 REGISTRY = ghcr.io
 IMAGE_NAME = dmahmalat/cert-manager-porkbun-webhook
-IMAGE_TAG  = 1.0.1
+IMAGE_TAG  = 1.0.2
 
 
 ##@ Help

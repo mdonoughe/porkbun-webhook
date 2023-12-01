@@ -11,12 +11,14 @@ import (
 	acme "github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/nrdcg/porkbun"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
 )
+
+var zapLogger, _ = zap.NewProduction()
 
 type PorkbunSolver struct {
 	kube *kubernetes.Clientset
@@ -37,7 +39,8 @@ type Config struct {
 }
 
 func (e *PorkbunSolver) Present(ch *acme.ChallengeRequest) error {
-	klog.Infof("Handling present request for %q %q", ch.ResolvedFQDN, ch.Key)
+	slogger := zapLogger.Sugar()
+	slogger.Infof("Handling present request for %q %q", ch.ResolvedFQDN, ch.Key)
 
 	config, err := clientConfig(e, ch)
 	if err != nil {
@@ -55,7 +58,7 @@ func (e *PorkbunSolver) Present(ch *acme.ChallengeRequest) error {
 
 	for _, record := range records {
 		if record.Type == "TXT" && record.Name == name && record.Content == ch.Key {
-			klog.Infof("Record %s is already present", record.ID)
+			slogger.Infof("Record %s is already present", record.ID)
 			return nil
 		}
 	}
@@ -70,12 +73,13 @@ func (e *PorkbunSolver) Present(ch *acme.ChallengeRequest) error {
 		return errors.Wrap(err, "create record error")
 	}
 
-	klog.Infof("Created record %v", id)
+	slogger.Infof("Created record %v", id)
 	return nil
 }
 
 func (e *PorkbunSolver) CleanUp(ch *acme.ChallengeRequest) error {
-	klog.Infof("Handling cleanup request for %q %q", ch.ResolvedFQDN, ch.Key)
+	slogger := zapLogger.Sugar()
+	slogger.Infof("Handling cleanup request for %q %q", ch.ResolvedFQDN, ch.Key)
 
 	config, err := clientConfig(e, ch)
 	if err != nil {
@@ -103,17 +107,18 @@ func (e *PorkbunSolver) CleanUp(ch *acme.ChallengeRequest) error {
 				return errors.Wrap(err, "delete record error")
 			}
 
-			klog.Infof("Deleted record %v", id)
+			slogger.Infof("Deleted record %v", id)
 			return nil
 		}
 	}
 
-	klog.Info("No matching record to delete")
+	slogger.Info("No matching record to delete")
 	return nil
 }
 
 func (e *PorkbunSolver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan struct{}) error {
-	klog.Info("Initializing")
+	slogger := zapLogger.Sugar()
+	slogger.Info("Initializing")
 
 	kube, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
