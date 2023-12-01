@@ -1,32 +1,92 @@
 package main
 
 import (
+	"encoding/json"
+	"math/rand"
 	"os"
 	"testing"
 
-	"github.com/jetstack/cert-manager/test/acme/dns"
-
-	"github.com/mdonoughe/cert-manager-porkbun/porkbun"
+	"github.com/cert-manager/cert-manager/test/acme/dns"
+	"github.com/dmahmalat/cert-manager-porkbun-webhook/porkbun"
+	"gopkg.in/yaml.v3"
+	"k8s.io/klog/v2"
 )
 
 var (
-	zone = os.Getenv("TEST_ZONE_NAME")
+	domain    = os.Getenv("TEST_DOMAIN_NAME")
+	apiKey    = os.Getenv("TEST_API_KEY")
+	secretKey = os.Getenv("TEST_SECRET_KEY")
+
+	configFile         = "_test/data/config.json"
+	secretYamlFilePath = "_test/data/cert-manager-porkbun-webhook-secret.yaml"
+	secretName         = "cert-manager-porkbun-webhook-secret"
+	apiKeyRef          = "api-key"
+	secretKeyRef       = "secret-key"
 )
 
+type SecretYaml struct {
+	ApiVersion string `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string `yaml:"kind,omitempty" json:"kind,omitempty"`
+	SecretType string `yaml:"type" json:"type"`
+	Metadata   struct {
+		Name string `yaml:"name"`
+	}
+	Data struct {
+		ApiKey    string `yaml:"api-key"`
+		SecretKey string `yaml:"secret-key"`
+	}
+}
+
 func TestRunsSuite(t *testing.T) {
-	// The manifest path should contain a file named config.json that is a
-	// snippet of valid configuration that should be included on the
-	// ChallengeRequest passed as part of the test cases.
+	secretYaml := SecretYaml{}
+	secretYaml.ApiVersion = "v1"
+	secretYaml.Kind = "Secret"
+	secretYaml.SecretType = "Opaque"
+	secretYaml.Metadata.Name = secretName
+	secretYaml.Data.ApiKey = apiKey
+	secretYaml.Data.SecretKey = secretKey
 
-	fixture := dns.NewFixture(porkbun.New(),
-		dns.SetStrict(true),
-		dns.SetResolvedZone(zone),
+	secretYamlFile, err := yaml.Marshal(&secretYaml)
+	if err != nil {
+		klog.Errorf("Error: %v", err.Error())
+	}
+	_ = os.WriteFile(secretYamlFilePath, secretYamlFile, 0644)
+
+	providerConfig := porkbun.PorkbunDNSProviderConfig{
+		SecretNameRef:      secretName,
+		ApiKeySecretRef:    apiKeyRef,
+		SecretKeySecretRef: secretKeyRef,
+	}
+	file, _ := json.MarshalIndent(providerConfig, "", " ")
+	_ = os.WriteFile(configFile, file, 0644)
+
+	// resolvedFQDN must end with a '.'
+	if domain[len(domain)-1:] != "." {
+		domain = domain + "."
+	}
+
+	fixture := dns.NewFixture(&porkbun.PorkbunSolver{},
+		dns.SetDNSName(domain),
+		dns.SetResolvedZone(domain),
+		dns.SetResolvedFQDN(GetRandomString(8)+"."+domain),
 		dns.SetAllowAmbientCredentials(false),
-		dns.SetManifestPath("testdata/porkbun-solver"),
+		dns.SetManifestPath("_test/data"),
+		dns.SetStrict(true),
 	)
-	//need to uncomment and  RunConformance delete runBasic and runExtended once https://github.com/cert-manager/cert-manager/pull/4835 is merged
-	//fixture.RunConformance(t)
-	fixture.RunBasic(t)
-	fixture.RunExtended(t)
 
+	fixture.RunConformance(t)
+
+	_ = os.Remove(configFile)
+	_ = os.Remove(secretYamlFilePath)
+}
+
+func GetRandomString(n int) string {
+	letters := []rune("abcdefghijklmnopqrstuvwxyz")
+
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	return string(b)
 }

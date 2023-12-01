@@ -1,72 +1,45 @@
-# Porkbun Webhook solver for Cert Manager
+[![Build](https://github.com/dmahmalat/cert-manager-porkbun-webhook/actions/workflows/publish.yml/badge.svg)](https://github.com/dmahmalat/cert-manager-porkbun-webhook/actions/workflows/publish.yml)
 
-This is an unofficial webhook solver for [Cert Manager](https://cert-manager.io/) and [Porkbun](https://porkbun.com/).
-
-## Usage
-
-1. Deploy the webhook:
-
-    ```
-    helm install porkbun-webhook ./deploy/porkbun-webhook \
-        --set groupName=<your group>
-    ```
-
-2. Create a secret containing your [API key](https://porkbun.com/account/api):
-
-    ```
-    kubectl create secret generic porkbun-key \
-        --from-literal=api-key=<your key> \
-        --from-literal=secret-key=<your key>
-    ```
-
-3. Create a role and role binding:
-
-    ```
-    kubectl apply -f rbac.yaml
-    ```
-
-4. Configure a certificate issuer:
-
-    ```yaml
-    apiVersion: cert-manager.io/v1
-    kind: ClusterIssuer
-    metadata:
-      name: letsencrypt
-    spec:
-      acme:
-        server: https://acme-v02.api.letsencrypt.org/directory
-        email: <your e-mail>
-        privateKeySecretRef:
-          name: letsencrypt-key
-        solvers:
-          - selector:
-              dnsZones:
-                - <your domain>
-            dns01:
-              webhook:
-                groupName: <your group>
-                solverName: porkbun
-                config:
-                  apiKeySecretRef:
-                    name: porkbun-key
-                    key: api-key
-                  secretKeySecretRef:
-                    name: porkbun-key
-                    key: secret-key
-    ```
-
-## Running the test suite
-
-All DNS providers **must** run the DNS01 provider conformance testing suite,
-else they will have undetermined behaviour when used with cert-manager.
-
-**It is essential that you configure and run the test suite when creating a
-DNS01 webhook.**
-
-To run the tests, first put your api key into testdata/porkbun-solver/porkbun-secret.yaml.
-
-Then you can run the test suite with:
-
+# ACME webhook for porkbun DNS API
+Usage:
 ```bash
-TEST_ZONE_NAME=<your domain>. make test
+helm install my-release oci://ghcr.io/dmahmalat/charts/cert-manager-porkbun-webhook
 ```
+
+To test:
+```bash
+TEST_DOMAIN_NAME=<domain> TEST_API_KEY=$(echo -n '<API Key>' | base64) TEST_SECRET_KEY=$(echo -n '<SECRET Key>' | base64) make test
+```
+
+# Example Issuer
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: <your e-mail>
+    privateKeySecretRef:
+      name: letsencrypt-key
+    solvers:
+      - selector:
+          dnsZones:
+            - <your domain>
+        dns01:
+          webhook:
+            groupName: <your group>
+            solverName: porkbun
+            config:
+              apiKeySecretRef:
+                name: porkbun-key
+                key: api-key
+              secretKeySecretRef:
+                name: porkbun-key
+                key: secret-key
+```
+
+# Credits
+This is based on the projects [mdonoughe/porkbun-webhook](https://github.com/mdonoughe/porkbun-webhook) and [cert-manager/webhook-example](https://github.com/cert-manager/webhook-example)
+Additional credits to project [nblxa/cert-manager-webhook-google-domains](https://github.com/nblxa/cert-manager-webhook-google-domains) for various fixes, updates and automation.

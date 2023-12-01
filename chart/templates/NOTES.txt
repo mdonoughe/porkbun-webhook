@@ -1,0 +1,1 @@
+The cert-manager webhook for Google Domains has been successfully configured.

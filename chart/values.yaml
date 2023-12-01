@@ -1,0 +1,89 @@
+# The GroupName here is used to identify your company or business unit that
+# created this webhook.
+# For example, this may be "acme.example.org".
+# This name will need to be referenced in each Issuer's `webhook` stanza to
+# inform cert-manager of where to send ChallengePayload resources in order to
+# solve the DNS01 challenge.
+# This group name should be **unique**, hence using your own company's domain
+# here is recommended.
+groupName: acmedns.example.org
+
+certManager:
+  serviceAccountName: cert-manager
+  namespace: cert-manager
+
+image:
+  repository: ghcr.io/dmahmalat/cert-manager-porkbun-webhook
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 443
+
+secretName:
+- cert-manager-porkbun-webhook-secret
+
+resources:
+  limits:
+     cpu: 250m
+     memory: 256Mi
+  requests:
+     cpu: 250m
+     memory: 256Mi
+
+nodeSelector: {}
+#  disktype: ssd
+
+tolerations: []
+#  - key: "key1"
+#    operator: "Equal"
+#    value: "value1"
+#    effect: "NoSchedule"
+
+affinity: {}
+#  nodeAffinity:
+#    requiredDuringSchedulingIgnoredDuringExecution:
+#      nodeSelectorTerms:
+#        - matchExpressions:
+#            - key: kubernetes.io/e2e-az-name
+#              operator: In
+#              values:
+#                - e2e-az1
+#                - e2e-az2
+#    preferredDuringSchedulingIgnoredDuringExecution:
+#      - weight: 1
+#        preference:
+#          matchExpressions:
+#            - key: another-node-label-key
+#              operator: In
+#              values:
+#                - another-node-label-value
+
+## Webhook pods' Security Context.
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+##
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+  ## sysctl settings
+  ## Example:
+  # sysctls:
+  # - name: net.core.somaxconn
+  #   value: "10000"
+  ##
+#  sysctls: []
+
+## Webhook Core containers' Security Context (only main container).
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+##
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
