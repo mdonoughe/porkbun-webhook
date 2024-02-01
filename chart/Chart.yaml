@@ -7,10 +7,10 @@ version: 0.0.0-template
 appVersion: 0.0.0-template
 
 icon: https://porkbun.com/partners/logos/porkbun.comphpPkl2eU.svg
-home: https://ghcr.io/dmahmalat/charts
+home: https://ghcr.io/lost-woods/charts
 
 sources:
-- https://github.com/dmahmalat/cert-manager-porkbun-webhook
+- https://github.com/lost-woods/cert-manager-porkbun-webhook
 
 keywords:
 - cert-manager

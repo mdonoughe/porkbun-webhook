@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/cert-manager/cert-manager/test/acme/dns"
-	"github.com/dmahmalat/cert-manager-porkbun-webhook/porkbun"
+	"github.com/lost-woods/cert-manager-porkbun-webhook/porkbun"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )

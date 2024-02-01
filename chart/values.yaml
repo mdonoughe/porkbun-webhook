@@ -13,7 +13,7 @@ certManager:
   namespace: cert-manager
 
 image:
-  repository: ghcr.io/dmahmalat/cert-manager-porkbun-webhook
+  repository: ghcr.io/lost-woods/cert-manager-porkbun-webhook
   tag: ""
   pullPolicy: IfNotPresent
 

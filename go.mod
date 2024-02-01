@@ -1,4 +1,4 @@
-module github.com/dmahmalat/cert-manager-porkbun-webhook
+module github.com/lost-woods/cert-manager-porkbun-webhook
 
 go 1.19
 

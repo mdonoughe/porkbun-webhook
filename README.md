@@ -1,9 +1,9 @@
-[![Build](https://github.com/dmahmalat/cert-manager-porkbun-webhook/actions/workflows/publish.yml/badge.svg)](https://github.com/dmahmalat/cert-manager-porkbun-webhook/actions/workflows/publish.yml)
+[![Build](https://github.com/lost-woods/cert-manager-porkbun-webhook/actions/workflows/publish.yml/badge.svg)](https://github.com/lost-woods/cert-manager-porkbun-webhook/actions/workflows/publish.yml)
 
 # ACME webhook for porkbun DNS API
 Usage:
 ```bash
-helm install my-release oci://ghcr.io/dmahmalat/charts/cert-manager-porkbun-webhook
+helm install my-release oci://ghcr.io/lost-woods/charts/cert-manager-porkbun-webhook
 ```
 
 To test:
