@@ -49,7 +49,7 @@ func (e *PorkbunSolver) readConfig(request *acme.ChallengeRequest) (*porkbun.Cli
 		return nil, err
 	}
 
-	return porkbun.New(secretKey, apiKey), nil
+	return porkbun.New(strings.TrimSpace(secretKey), strings.TrimSpace(apiKey)), nil
 }
 
 func (e *PorkbunSolver) resolveSecretRef(selector corev1.SecretKeySelector, ch *acme.ChallengeRequest) (string, error) {
