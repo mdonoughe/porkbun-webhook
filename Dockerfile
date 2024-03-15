@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.17-alpine AS build_deps
+FROM docker.io/library/golang:1.22-alpine AS build_deps
 
 RUN apk add --no-cache git
 
@@ -15,7 +15,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o webhook -ldflags '-w -extldflags "-static"' .
 
-FROM docker.io/library/alpine:3.9
+FROM docker.io/library/alpine:3.19
 
 RUN apk add --no-cache ca-certificates
 

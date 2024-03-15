@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
-	"k8s.io/klog"
+	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
+	klog "k8s.io/klog/v2"
 
 	"github.com/mdonoughe/cert-manager-porkbun/porkbun"
 )

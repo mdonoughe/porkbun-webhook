@@ -6,15 +6,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jetstack/cert-manager/pkg/acme/webhook"
-	acme "github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
+	"github.com/cert-manager/cert-manager/pkg/acme/webhook"
+	acme "github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/nrdcg/porkbun"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
+	klog "k8s.io/klog/v2"
 )
 
 type PorkbunSolver struct {
@@ -84,7 +84,7 @@ func (e *PorkbunSolver) Present(ch *acme.ChallengeRequest) error {
 
 	for _, record := range records {
 		if record.Type == "TXT" && record.Name == name && record.Content == ch.Key {
-			klog.Infof("Record is already present", record.ID)
+			klog.Infof("Record %s is already present", record.ID)
 			return nil
 		}
 	}
